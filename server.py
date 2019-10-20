@@ -78,10 +78,13 @@ class Server(object):
         :param room_number: int
         :return: str
         """
-
         # TODO: YOUR CODE HERE
+        return {0:"This room has green wallpaper",
+                1:"This room has red wallpaper", 
+                2:"This room has blue wallpaper", 
+                3:"This room has yellow wallpaper"}[room_number]
 
-        pass
+
 
     def greet(self):
         """
@@ -109,8 +112,13 @@ class Server(object):
         """
 
         # TODO: YOUR CODE HERE
+        received = b''
+        while b"\n" not in received:
+            received += self.client_connection.recv(32)
+            
+        self.input_buffer = received.decode().strip()
 
-        pass
+
 
     def move(self, argument):
         """
@@ -134,8 +142,35 @@ class Server(object):
         """
 
         # TODO: YOUR CODE HERE
+        # if self.room == 0 and argument == "north":
+        #     self.room = 3
 
-        pass
+        # if self.room == 0 and argument == "west":
+        #     self.room = 1
+
+        # if self.room == 0 and argument == "east":
+        #     self.room = 2
+
+        # if self.room == 1 and argument == "east":
+        #     self.room = 0
+
+        # if self.room == 2 and argument == "west":
+        #     self.room = 0
+
+        # if self.room == 3 and argument == "south":
+        #     self.room = 0
+
+        # self.output_buffer = self.room_description(self.room)
+
+        # Other solution not using ifs
+        n_room = {0:{'north': 3, 'west': 1, 'east': 2},
+                 1:{'east': 0},
+                 2:{'west': 0},
+                 3:{'south': 0}}
+
+        self.output_buffer = self.room_description(n_room[self.room][argument])
+        
+        
 
     def say(self, argument):
         """
@@ -152,8 +187,8 @@ class Server(object):
         """
 
         # TODO: YOUR CODE HERE
+        self.output_buffer = "You say, \"{}\"".format(argument)
 
-        pass
 
     def quit(self, argument):
         """
@@ -168,8 +203,10 @@ class Server(object):
         """
 
         # TODO: YOUR CODE HERE
+        self.done = True
+        self.output_buffer = "Goodbye!"
 
-        pass
+
 
     def route(self):
         """
@@ -184,8 +221,24 @@ class Server(object):
         """
 
         # TODO: YOUR CODE HERE
+        received = self.input_buffer.split(" ")
 
-        pass
+        command = received.pop(0).strip("\n")
+        arguments = " ".join(received)
+
+        # If `self.input_buffer` was "say Is anybody here?", then:
+        # `command` should now be "say" and `arguments` should now be "Is anybody here?".
+        #
+        # If `self.input_buffer` was "move north", then:
+        # `command` should now be "move" and `arguments` should now be "north".
+
+        {
+            'quit': self.quit,
+            'move': self.move,
+            'say': self.say,
+        }[command](arguments)
+
+
 
     def push_output(self):
         """
@@ -198,9 +251,11 @@ class Server(object):
         """
 
         # TODO: YOUR CODE HERE
+        message = "OK! " + self.output_buffer + "\n"
+        self.client_connection.sendall(message.encode())
+        # self.client_connection.sendall(b"OK! " + self.output_buffer.encode() + b"\n")
 
-        pass
-
+        
     def serve(self):
         self.connect()
         self.greet()
